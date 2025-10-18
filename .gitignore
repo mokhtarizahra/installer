@@ -1,4 +1,4 @@
-
+# Object and binary files
 *.o
 *.obj
 *.dll
@@ -6,29 +6,25 @@
 *.a
 *.lib
 *.autosave
+
+# Makefile
 Makefile
 
+# Qt/IDE files
 *.pro.user
 *.qmake.stash
 
+# Backup and temporary files
 Backup/
 *.tmp
 *.log
 
-
-# Ignore binaries
-*.dll
-*.o
-
-# Ignore Qt/IDE files
-*.pro.user
-*.autosave
-*.qmake.stash
-
-# Ignore images
+# Images
 *.png
 
-# Ignore folders
+# Folders
 MNC_SCADA/
 UpdateMNC_SCADA/
 
+# Blocked files
+[B.pro](blocked)
