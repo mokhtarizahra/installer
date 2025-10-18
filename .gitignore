@@ -1,0 +1,18 @@
+# فایل‌های ساخته شده توسط کامپایلر
+*.o
+*.obj
+*.dll
+*.exe
+*.a
+*.lib
+*.autosave
+Makefile
+
+# فایل‌های Qt Creator
+*.pro.user
+*.qmake.stash
+
+# پوشه‌ها و فایل‌های موقتی / بکاپ
+Backup/
+*.tmp
+*.log
