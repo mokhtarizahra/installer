@@ -27,7 +27,10 @@ MNC_SCADA/
 UpdateMNC_SCADA/
 
 # Blocked files
-[B.pro](blocked)
+Registry.qrc
+config.ini
+resources.qrc
+
 
 # Temporary / unwanted files
 A.pro.user.c6744e9
