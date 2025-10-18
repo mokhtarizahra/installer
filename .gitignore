@@ -1,4 +1,4 @@
-# فایل‌های ساخته شده توسط کامپایلر
+
 *.o
 *.obj
 *.dll
@@ -8,11 +8,27 @@
 *.autosave
 Makefile
 
-# فایل‌های Qt Creator
 *.pro.user
 *.qmake.stash
 
-# پوشه‌ها و فایل‌های موقتی / بکاپ
 Backup/
 *.tmp
 *.log
+
+
+# Ignore binaries
+*.dll
+*.o
+
+# Ignore Qt/IDE files
+*.pro.user
+*.autosave
+*.qmake.stash
+
+# Ignore images
+*.png
+
+# Ignore folders
+MNC_SCADA/
+UpdateMNC_SCADA/
+
