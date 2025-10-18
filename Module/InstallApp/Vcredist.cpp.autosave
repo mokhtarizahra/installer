@@ -1,0 +1,82 @@
+#include "Vcredist.h"
+#include "showmessages.h"
+#include <QCoreApplication>
+#include <QDir>
+#include <QFileInfo>
+
+
+
+Vcredist::Vcredist()
+{
+
+}
+
+
+void Vcredist::install() {
+    qDebug() << "Installing vcredist_2008...";
+    
+    if (isVCRedistInstalled()) {
+        qDebug() << "vcredist_2008 is already installed.";
+        m_showMessages->showMessage("vcredist_2008 is already installed.", QMessageBox::Information, QMessageBox::Ok);
+    } else {
+        // Path to the vcredist_2008 installer
+        QString installerPath = QCoreApplication::applicationDirPath() + "/Module/InstallApp/vcredist_2008.exe";
+
+        if (QFile::exists(installerPath)) {
+            QProcess process;
+            process.setProgram(installerPath);
+
+            // Start the installation process interactively
+            process.start();
+
+            if (!process.waitForStarted()) {
+                qDebug() << "Failed to start the vcredist_2008 installer!";
+                m_showMessages->showMessage("Failed to start the vcredist_2008 installer!", QMessageBox::Critical, QMessageBox::Ok);
+                return;
+            } else {
+                qDebug() << "vcredist_2008 installer started successfully.";
+            }
+
+            // Wait for the installation process to finish
+            if (!process.waitForFinished(-1)) { // -1 means no timeout
+                qDebug() << "Error while waiting for vcredist_2008 installer to finish!";
+                m_showMessages->showMessage("Error while waiting for vcredist_2008 installer to finish!", QMessageBox::Critical, QMessageBox::Ok);
+                return;
+            } else {
+                qDebug() << "vcredist_2008 installer finished.";
+            }
+
+            // Check again if vcredist_2008 is installed
+            if (isVCRedistInstalled()) {
+                qDebug() << "vcredist_2008 installed successfully.";
+                m_showMessages->showMessage("vcredist_2008 installed successfully.", QMessageBox::Information, QMessageBox::Ok);
+            } else {
+                qDebug() << "vcredist_2008 installation failed or not detected!";
+                m_showMessages->showMessage("vcredist_2008 installation failed or not detected!", QMessageBox::Critical, QMessageBox::Ok);
+            }
+        } else {
+            qDebug() << "Installer file does not exist:" << installerPath;
+            m_showMessages->showMessage("vcredist_2008 installer is missing in the application directory.", QMessageBox::Critical, QMessageBox::Ok);
+        }
+    }
+}
+
+bool Vcredist::isVCRedistInstalled() {
+    // Check if vcredist_2008 is installed by looking for its registry entry
+    QSettings registry("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall", QSettings::NativeFormat);
+    QStringList keys = registry.childGroups();
+
+    for (const QString &key : keys) {
+        registry.beginGroup(key);
+        QString displayName = registry.value("DisplayName").toString();
+        registry.endGroup();
+
+        if (displayName.contains("Microsoft Visual C++ 2008", Qt::CaseInsensitive)) {
+            qDebug() << "vcredist_2008 is installed.";
+            return true;
+        }
+    }
+
+    qDebug() << "vcredist_2008 is NOT installed.";
+    return false;
+}

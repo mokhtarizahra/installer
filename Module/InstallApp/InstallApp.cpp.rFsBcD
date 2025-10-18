@@ -1,0 +1,149 @@
+#include "InstallApp.h"
+#include "ui_InstallApp.h"
+#include "StyleSheetManager.h"
+#include "InstallSQL.h"
+#include "InstallMongo.h"
+#include "InstallNotepad.h"
+#include "InstallODBC.h"
+#include "InstallSSMS.h"
+
+InstallApp::InstallApp(QWidget *parent)
+    : QWidget(parent), ui(new Ui::InstallApp) {
+    ui->setupUi(this);
+
+
+    this->setFixedSize(340, 475);
+    setWidgetOpacity(ui->ToolsappList, 0.9);
+
+
+    m_sqlInstaller = new InstallSQL();
+    m_ssmsInstaller = new InstallSSMS();
+    //    m_odbcInstaller = new InstallODBC();
+    m_VcredistInstaller= new InstallVcredist() ;
+    m_mongoInstaller = new InstallMongo();
+    m_notepadInstaller = new InstallNotepad();
+
+
+    ui->ToolsappList->setStyleSheet(StyleSheetManager::listWidgetStyle());
+    ui->InstallButton->setStyleSheet(StyleSheetManager::buttonStyle());
+    ui->messageLabel->setStyleSheet(StyleSheetManager::LabelStyle());
+
+    ui->ToolsappList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    ui->messageLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    ui->InstallButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    ui->messageLabel->setText("Select the app you want to install.");
+    ui->ToolsappList->addItem("SQL Server 2019");
+    ui->ToolsappList->addItem("SSMS");
+    //    ui->ToolsappList->addItem("ODBC");
+    ui->ToolsappList->addItem("MongoDB");
+    ui->ToolsappList->addItem("Notepad");
+    ui->ToolsappList->addItem("Vcredist");
+    connect(ui->InstallButton, &QPushButton::clicked, this, &InstallApp::onInstallButtonClicked);
+    connect(ui->ToolsappList, &QListWidget::itemSelectionChanged, this, &InstallApp::onSoftwareSelected);
+}
+InstallApp::~InstallApp() {
+    delete ui;
+    delete m_sqlInstaller;
+    delete m_ssmsInstaller;
+    delete m_VcredistInstaller;
+    delete m_mongoInstaller;
+    delete m_notepadInstaller;
+}
+////////////////////////////////////////////////////////////////////////////
+#include <QGraphicsOpacityEffect>
+void InstallApp::setWidgetOpacity(QWidget *widget, qreal opacity)
+{
+    QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect(widget);
+    effect->setOpacity(opacity);
+    widget->setGraphicsEffect(effect);
+}
+//////////////////////////////////////////////////////////////////////
+void InstallApp::onSoftwareSelected() {
+    QListWidgetItem *item = ui->ToolsappList->currentItem();
+    checkInstallationStatus();
+
+    if (item) {
+        qDebug() << "Selected software: " << item->text();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+void InstallApp::onInstallButtonClicked() {
+    QListWidgetItem *item = ui->ToolsappList->currentItem();
+    if (item) {
+        QString software = item->text();
+        if (software == "SQL Server 2019") {
+            m_sqlInstaller->install();
+        } else if (software == "SSMS") {
+            m_ssmsInstaller->install();
+        } else if (software == "Vcredist") {
+            m_VcredistInstaller->install();
+        } else if (software == "MongoDB") {
+            m_mongoInstaller->checkAndInstallMongo();
+        } else if (software == "Notepad") {
+            m_notepadInstaller->checkAndInstall();
+        } else {
+            qDebug() << "Unknown software: " << software;
+            m_showMessages->showMessage("Unknown software: " + software, QMessageBox::Critical, QMessageBox::Ok);
+        }
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void InstallApp::checkInstallationStatus() {
+    qDebug() << "OOOOOO";
+
+    QList<QPair<QString, QObject*>> softwareList;
+    softwareList.append(qMakePair(QString("SQL Server 2019"), static_cast<QObject*>(m_sqlInstaller)));
+    softwareList.append(qMakePair(QString("SSMS"), static_cast<QObject*>(m_ssmsInstaller)));
+    softwareList.append(qMakePair(QString("Vcredist"), static_cast<QObject*>(m_VcredistInstaller)));
+    softwareList.append(qMakePair(QString("MongoDB"), static_cast<QObject*>(m_mongoInstaller)));
+    softwareList.append(qMakePair(QString("Notepad"), static_cast<QObject*>(m_notepadInstaller)));
+
+    for (const auto& pair : softwareList) {
+        QString softwareName = pair.first;
+        QObject* installer = pair.second;
+
+        if (!installer) {
+            qDebug() << "Installer not found for:" << softwareName;
+            continue;
+        }
+        bool isInstalled = false;
+
+
+        if (qobject_cast<InstallSQL*>(installer)) {
+            isInstalled = static_cast<InstallSQL*>(installer)->isInstall();
+        } else if (qobject_cast<InstallSSMS*>(installer)) {
+            isInstalled = static_cast<InstallSSMS*>(installer)->isInstall();
+        } else if (qobject_cast<InstallVcredist*>(installer)) {
+            isInstalled = static_cast<InstallVcredist*>(installer)->isInstall();
+        } else if (qobject_cast<InstallMongo*>(installer)) {
+            isInstalled = static_cast<InstallMongo*>(installer)->isInstall();
+        } else if (qobject_cast<InstallNotepad*>(installer)) {
+            isInstalled = static_cast<InstallNotepad*>(installer)->isInstall();
+        }
+
+        QString installedIconPath = QCoreApplication::applicationDirPath() + "check2.png";
+        QString notInstalledIconPath = QCoreApplication::applicationDirPath() + "cross2.png";
+
+        for (int i = 0; i < ui->ToolsappList->count(); ++i) {
+            QListWidgetItem* item = ui->ToolsappList->item(i);
+            if (item && item->text() == softwareName) {
+                if (isInstalled) {
+
+                    QIcon checkIcon( "./check2.png");
+                    qDebug() << "Setting check icon for:" << softwareName;
+                    item->setIcon(checkIcon);
+                    qDebug()<<checkIcon;
+                } else {
+
+                    QIcon crossIcon("./cross2.png");
+                    qDebug() << "Setting check icon for:" << softwareName;
+                    item->setIcon(crossIcon);
+                    qDebug()<<crossIcon;
+                }
+                break;
+            }
+        }
+    }
+}
